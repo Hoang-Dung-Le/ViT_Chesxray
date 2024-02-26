@@ -4,6 +4,7 @@ from torch import nn
 from torchvision import transforms
 from timm.models import vit_base_patch16_224
 import argparse
+from tqdm import tqdm
 
 
 def main():
@@ -66,17 +67,29 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
     for epoch in range(epochs):
         model.train()
-        for batch in train_loader:
+        total_loss = 0.0
+        
+        # Sử dụng tqdm để hiển thị thanh tiến trình
+        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}"):
             images, labels = batch
+            images, labels = images.to(device), labels.to(device)  # Chuyển dữ liệu lên GPU
+            
             outputs = model(images)
             loss = criterion(outputs, labels)
+            
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            print(f"Epoch {epoch + 1}: Loss: {loss.item()}")
+            
+            total_loss += loss.item()
 
+        average_loss = total_loss / len(train_loader)
+        print(f"Epoch {epoch + 1}: Average Loss: {average_loss:.4f}")
     # Lưu mô hình
     torch.save(model.state_dict(), "vit_multilabel.pt")
 
