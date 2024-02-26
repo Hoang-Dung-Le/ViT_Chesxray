@@ -17,6 +17,8 @@ def main():
                     help='version of data augmentation to use')
     parser.add_argument('--maintain-ratio', dest='maintain_ratio', action='store_true',
                     help='whether to maintain aspect ratio or scale the image')
+    parser.add_argument('--rotate', dest='rotate', action='store_true',
+                    help='to rotate image')
 
     parser.add_argument('--num_classes', dest='num_classes', type=int, default=14,
                         help='Number of classes')
