@@ -15,6 +15,8 @@ def main():
     parser.add_argument('--aug-setting', default='chexpert',
                     choices=['moco_v1', 'moco_v2', 'chexpert'],
                     help='version of data augmentation to use')
+    parser.add_argument('--maintain-ratio', dest='maintain_ratio', action='store_true',
+                    help='whether to maintain aspect ratio or scale the image')
 
     parser.add_argument('--num_classes', dest='num_classes', type=int, default=14,
                         help='Number of classes')
