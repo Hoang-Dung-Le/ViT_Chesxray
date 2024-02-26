@@ -5,6 +5,55 @@ from torchvision import transforms
 from timm.models import vit_base_patch16_224
 import argparse
 from tqdm import tqdm
+from sklearn.metrics import roc_auc_score, roc_curve
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def computeAUROC(dataPRED, dataGT, classCount=14):
+
+    outAUROC = []
+    fprs, tprs, thresholds = [], [], []
+    print(dataPRED)
+    
+    for i in range(classCount):
+        try:
+            pred_probs = dataPRED[:, i]
+            fpr, tpr, threshold = roc_curve(dataGT[:, i], pred_probs)
+           
+            roc_auc = roc_auc_score(dataGT[:, i], pred_probs)
+            outAUROC.append(roc_auc)
+
+            # Store FPR, TPR, and thresholds for each class
+            fprs.append(fpr)
+            tprs.append(tpr)
+            thresholds.append(threshold)
+        except:
+            outAUROC.append(0.)
+
+    auc_each_class_array = np.array(outAUROC)
+
+    print("each class: ",auc_each_class_array)
+    # Average over all classes
+    result = np.average(auc_each_class_array[auc_each_class_array != 0])
+    # print(result)
+    plt.figure(figsize=(10, 8))  # Đặt kích thước hình ảnh chung
+
+    for i in range(len(fprs)):
+        plt.plot(fprs[i], tprs[i], label=f'Class {i} (AUC = {outAUROC[i]:.2f})')
+
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curves for all Classes')
+    plt.legend()
+
+    output_file = f'./roc_auc.png'  # Đường dẫn lưu ảnh
+
+    # Lưu hình xuống file
+    plt.savefig(output_file)
+
+    return result
 
 
 def main():
@@ -72,24 +121,42 @@ def main():
 
     for epoch in range(epochs):
         model.train()
-        total_loss = 0.0
+        # total_loss = 0.0
         
-        # Sử dụng tqdm để hiển thị thanh tiến trình
-        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}"):
-            images, labels = batch
-            images, labels = images.to(device), labels.to(device)  # Chuyển dữ liệu lên GPU
+        # for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}"):
+        #     images, labels = batch
+        #     images, labels = images.to(device), labels.to(device)  # Chuyển dữ liệu lên GPU
             
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+        #     outputs = model(images)
+        #     loss = criterion(outputs, labels)
             
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        #     optimizer.zero_grad()
+        #     loss.backward()
+        #     optimizer.step()
             
-            total_loss += loss.item()
+        #     total_loss += loss.item()
 
-        average_loss = total_loss / len(train_loader)
-        print(f"Epoch {epoch + 1}: Average Loss: {average_loss:.4f}")
+        # average_loss = total_loss / len(train_loader)
+        # print(f"Epoch {epoch + 1}: Average Loss: {average_loss:.4f}")
+
+        model.eval()
+        val_pred_probs, val_true_labels = [], []
+
+        with torch.no_grad():
+            for val_batch in tqdm(val_loader, desc="Validation"):
+                val_images, val_labels = val_batch
+                val_images, val_labels = val_images.to(device), val_labels.to(device)
+
+                val_outputs = model(val_images)
+                val_pred_probs.extend(val_outputs.cpu().numpy())
+                val_true_labels.extend(val_labels.cpu().numpy())
+
+        val_pred_probs = np.array(val_pred_probs)
+        val_true_labels = np.array(val_true_labels)
+
+        # Compute ROC AUC on validation set
+        val_auc = computeAUROC(val_pred_probs, val_true_labels)
+        print(f"Epoch {epoch + 1}: Validation AUC: {val_auc:.4f}")
     # Lưu mô hình
     torch.save(model.state_dict(), "vit_multilabel.pt")
 
