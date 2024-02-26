@@ -19,7 +19,7 @@ def main():
                     help='whether to maintain aspect ratio or scale the image')
     parser.add_argument('--rotate', dest='rotate', action='store_true',
                     help='to rotate image')
-    parser.add_argument('--crop', dest='crop', type=int, default=299,
+    parser.add_argument('--crop', dest='crop', type=int, default=224,
                     help='image crop (Chexpert=320)')
 
     parser.add_argument('--num_classes', dest='num_classes', type=int, default=14,
