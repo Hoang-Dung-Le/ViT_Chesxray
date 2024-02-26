@@ -73,3 +73,6 @@ def main():
 
     # Lưu mô hình
     torch.save(model.state_dict(), "vit_multilabel.pt")
+
+if __name__=='__main__':
+    main()
