@@ -14,7 +14,6 @@ def computeAUROC(dataPRED, dataGT, classCount=14):
 
     outAUROC = []
     fprs, tprs, thresholds = [], [], []
-    print(dataPRED)
     
     for i in range(classCount):
         try:
