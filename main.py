@@ -113,7 +113,7 @@ def main():
 
 
     # Huấn luyện mô hình
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -121,23 +121,23 @@ def main():
 
     for epoch in range(epochs):
         model.train()
-        # total_loss = 0.0
+        total_loss = 0.0
         
-        # for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}"):
-        #     images, labels = batch
-        #     images, labels = images.to(device), labels.to(device)  # Chuyển dữ liệu lên GPU
+        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}"):
+            images, labels = batch
+            images, labels = images.to(device), labels.to(device)  # Chuyển dữ liệu lên GPU
             
-        #     outputs = model(images)
-        #     loss = criterion(outputs, labels)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
             
-        #     optimizer.zero_grad()
-        #     loss.backward()
-        #     optimizer.step()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
             
-        #     total_loss += loss.item()
+            total_loss += loss.item()
 
-        # average_loss = total_loss / len(train_loader)
-        # print(f"Epoch {epoch + 1}: Average Loss: {average_loss:.4f}")
+        average_loss = total_loss / len(train_loader)
+        print(f"Epoch {epoch + 1}: Average Loss: {average_loss:.4f}")
 
         model.eval()
         val_pred_probs, val_true_labels = [], []
